@@ -28,5 +28,20 @@ export async function llmCall(prompt: string, model: string = "openai/gpt-4o-min
   return chatCompletion.choices[0]?.message.content as string;
 }
 
-// const test = await llmCall("한국의 수도는?");
-// console.log(test);
+export async function llmCallAsync(prompt: string, model: string = "openai/gpt-4o-mini") : Promise<string> {
+  let message: Message[] = [];
+
+  message.push({
+    role: "user",
+    content: prompt,
+  });
+
+  const chatCompletion: ChatResponse = await openRouter.chat.send({
+    model: model,
+    messages: message,
+  });
+
+  console.log(`${model} 완료`);
+
+  return chatCompletion.choices[0]?.message.content as string;
+}
