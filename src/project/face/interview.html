@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접 표정 분석 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .video-section {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 20px;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 700;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .results {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-number {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .score-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .metric-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metric-score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-feedback {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .recommendations {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .recommendations h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recommendations li {
+            padding: 8px 0;
+            color: #856404;
+        }
+
+        .recommendations li:before {
+            content: "💡 ";
+            margin-right: 8px;
+        }
+
+        .detailed-analysis {
+            background: #e7f3ff;
+            border-radius: 10px;
+            padding: 20px;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 면접 표정 분석 시스템</h1>
+        <p class="subtitle">MediaPipe와 GPT를 활용한 실시간 표정 분석</p>
+
+        <div class="video-section">
+            <video id="video" autoplay playsinline></video>
+            <div class="video-overlay" id="videoOverlay">
+                <span>카메라를 시작하려면 "분석 시작" 버튼을 클릭하세요</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="timer" id="timer">00:00</div>
+
+        <div class="controls">
+            <button class="btn-primary" id="startBtn">분석 시작</button>
+            <button class="btn-danger" id="stopBtn" disabled>중지</button>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-row">
+                <span class="info-label">프레임 수:</span>
+                <span class="info-value" id="frameCount">0</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">표정 변화:</span>
+                <span class="info-value" id="changeCount">0</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">상태:</span>
+                <span class="info-value" id="status">대기 중</span>
+            </div>
+        </div>
+
+        <div id="loadingSection" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>GPT가 표정을 분석 중입니다...</p>
+        </div>
+
+        <div id="errorSection" class="error" style="display: none;"></div>
+
+        <div id="results" class="results">
+            <div class="score-card">
+                <div class="score-label">종합 점수</div>
+                <div class="score-number" id="overallScore">-</div>
+                <div class="score-label">/ 100</div>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">💪 자신감</span>
+                        <span class="metric-score" id="confidenceScore">-</span>
+                    </div>
+                    <div class="metric-feedback" id="confidenceFeedback"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">🎯 참여도</span>
+                        <span class="metric-score" id="engagementScore">-</span>
+                    </div>
+                    <div class="metric-feedback" id="engagementFeedback"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title">😊 감정 안정성</span>
+                        <span class="metric-score" id="stabilityScore">-</span>
+                    </div>
+                    <div class="metric-feedback" id="stabilityFeedback"></div>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h3>💡 개선 제안</h3>
+                <ul id="recommendations"></ul>
+            </div>
+
+            <div class="detailed-analysis">
+                <h3 style="margin-bottom: 15px;">📝 종합 분석</h3>
+                <div id="detailedAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { FilesetResolver, FaceLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
+
+        // 상태 관리
+        let faceLandmarker = null;
+        let video = null;
+        let isAnalyzing = false;
+        let startTime = 0;
+        const MAX_DURATION = 2 * 60 * 1000; // 2분
+
+        // 표정 추적 데이터
+        const metricsHistory = [];
+        const significantChanges = [];
+
+        // DOM 요소
+        const videoElement = document.getElementById('video');
+        const videoOverlay = document.getElementById('videoOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const timerElement = document.getElementById('timer');
+        const progressBar = document.getElementById('progressBar');
+        const frameCountElement = document.getElementById('frameCount');
+        const changeCountElement = document.getElementById('changeCount');
+        const statusElement = document.getElementById('status');
+        const loadingSection = document.getElementById('loadingSection');
+        const errorSection = document.getElementById('errorSection');
+        const resultsSection = document.getElementById('results');
+
+        // MediaPipe 초기화
+        async function initMediaPipe() {
+            const vision = await FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+            );
+
+            faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                    delegate: "GPU"
+                },
+                runningMode: "VIDEO",
+                numFaces: 1,
+                minFaceDetectionConfidence: 0.5,
+                minFacePresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+        }
+
+        // 웹캠 시작
+        async function startWebcam() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 1280, height: 720 }
+            });
+            videoElement.srcObject = stream;
+            video = videoElement;
+        }
+
+        // 표정 분석 시작
+        async function startAnalysis() {
+            try {
+                statusElement.textContent = 'MediaPipe 로딩 중...';
+                await initMediaPipe();
+
+                statusElement.textContent = '카메라 시작 중...';
+                await startWebcam();
+
+                videoOverlay.style.display = 'none';
+                isAnalyzing = true;
+                startTime = Date.now();
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                statusElement.textContent = '분석 중';
+
+                processFrame();
+            } catch (error) {
+                showError('초기화 실패: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // 프레임 처리
+        function processFrame() {
+            if (!isAnalyzing) return;
+
+            const currentTime = Date.now();
+            const elapsed = currentTime - startTime;
+
+            // 2분 경과 체크
+            if (elapsed >= MAX_DURATION) {
+                stopAnalysis();
+                return;
+            }
+
+            // 진행률 업데이트
+            const progress = (elapsed / MAX_DURATION) * 100;
+            progressBar.style.width = progress + '%';
+
+            // 타이머 업데이트
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            // 얼굴 랜드마크 감지
+            if (video.readyState >= 2) {
+                const results = faceLandmarker.detectForVideo(video, currentTime);
+
+                if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+                    const landmarks = results.faceLandmarks[0];
+                    extractMetrics(landmarks, currentTime);
+                }
+            }
+
+            requestAnimationFrame(processFrame);
+        }
+
+        // 표정 지표 추출 (간소화 버전)
+        function extractMetrics(landmarks, timestamp) {
+            // 간단한 EAR, MAR 계산
+            const leftEyePoints = [33, 160, 158, 133, 153, 144].map(i => landmarks[i]);
+            const rightEyePoints = [362, 385, 387, 263, 373, 380].map(i => landmarks[i]);
+            const mouthPoints = [61, 291, 0, 17].map(i => landmarks[i]);
+
+            const leftEAR = calculateEAR(leftEyePoints);
+            const rightEAR = calculateEAR(rightEyePoints);
+            const mar = calculateMAR(mouthPoints);
+
+            const metrics = {
+                timestamp,
+                eyeAspectRatio: { left: leftEAR, right: rightEAR },
+                mouthAspectRatio: mar,
+                eyebrowHeight: { left: 0.1, right: 0.1 },
+                smileIntensity: 0,
+                headTilt: 0
+            };
+
+            metricsHistory.push(metrics);
+            frameCountElement.textContent = metricsHistory.length;
+
+            // 변화 감지
+            if (metricsHistory.length > 1) {
+                detectChanges(metrics);
+            }
+        }
+
+        function calculateEAR(points) {
+            const dist1 = distance(points[1], points[5]);
+            const dist2 = distance(points[2], points[4]);
+            const dist3 = distance(points[0], points[3]);
+            return (dist1 + dist2) / (2.0 * dist3);
+        }
+
+        function calculateMAR(points) {
+            const vertical = distance(points[2], points[3]);
+            const horizontal = distance(points[0], points[1]);
+            return vertical / horizontal;
+        }
+
+        function distance(p1, p2) {
+            return Math.sqrt(
+                Math.pow(p2.x - p1.x, 2) +
+                Math.pow(p2.y - p1.y, 2)
+            );
+        }
+
+        function detectChanges(current) {
+            const previous = metricsHistory[metricsHistory.length - 2];
+            const threshold = 0.15;
+
+            if (Math.abs(current.eyeAspectRatio.left - previous.eyeAspectRatio.left) > threshold) {
+                significantChanges.push({
+                    timestamp: current.timestamp,
+                    metric: 'leftEye',
+                    value: current.eyeAspectRatio.left,
+                    changeRate: Math.abs(current.eyeAspectRatio.left - previous.eyeAspectRatio.left),
+                    description: '왼쪽 눈 변화'
+                });
+            }
+
+            if (Math.abs(current.mouthAspectRatio - previous.mouthAspectRatio) > threshold) {
+                significantChanges.push({
+                    timestamp: current.timestamp,
+                    metric: 'mouth',
+                    value: current.mouthAspectRatio,
+                    changeRate: Math.abs(current.mouthAspectRatio - previous.mouthAspectRatio),
+                    description: '입 모양 변화'
+                });
+            }
+
+            changeCountElement.textContent = significantChanges.length;
+        }
+
+        // 분석 중지
+        async function stopAnalysis() {
+            isAnalyzing = false;
+            startBtn.disabled = true;
+            stopBtn.disabled = true;
+            statusElement.textContent = 'GPT 분석 중...';
+
+            // 웹캠 정지
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            // GPT 분석 요청
+            await analyzeWithGPT();
+        }
+
+        // GPT 분석
+        async function analyzeWithGPT() {
+            loadingSection.style.display = 'block';
+
+            try {
+                const summary = {
+                    totalDuration: metricsHistory.length > 0 ?
+                        metricsHistory[metricsHistory.length - 1].timestamp - metricsHistory[0].timestamp : 0,
+                    averageMetrics: calculateAverages(),
+                    changeCount: significantChanges.length
+                };
+
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        metricsHistory,
+                        significantChanges,
+                        summary
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('분석 요청 실패');
+                }
+
+                const result = await response.json();
+                console.log('=== API 응답 수신 ===');
+                console.log('전체 응답:', result);
+                console.log('confidence:', result.confidence);
+                console.log('engagement:', result.engagement);
+                console.log('emotionalStability:', result.emotionalStability);
+                console.log('recommendations:', result.recommendations);
+                displayResults(result);
+            } catch (error) {
+                showError('GPT 분석 실패: ' + error.message);
+            } finally {
+                loadingSection.style.display = 'none';
+                statusElement.textContent = '완료';
+            }
+        }
+
+        function calculateAverages() {
+            if (metricsHistory.length === 0) return {};
+
+            const sum = metricsHistory.reduce((acc, m) => ({
+                leftEAR: acc.leftEAR + m.eyeAspectRatio.left,
+                rightEAR: acc.rightEAR + m.eyeAspectRatio.right,
+                mar: acc.mar + m.mouthAspectRatio
+            }), { leftEAR: 0, rightEAR: 0, mar: 0 });
+
+            const count = metricsHistory.length;
+            return {
+                eyeAspectRatio: {
+                    left: sum.leftEAR / count,
+                    right: sum.rightEAR / count
+                },
+                mouthAspectRatio: sum.mar / count
+            };
+        }
+
+        // 결과 표시
+        function displayResults(result) {
+            console.log('=== displayResults 호출됨 ===');
+            console.log('result 객체:', result);
+
+            // DOM 요소 존재 확인
+            const elements = {
+                overallScore: document.getElementById('overallScore'),
+                confidenceScore: document.getElementById('confidenceScore'),
+                confidenceFeedback: document.getElementById('confidenceFeedback'),
+                engagementScore: document.getElementById('engagementScore'),
+                engagementFeedback: document.getElementById('engagementFeedback'),
+                stabilityScore: document.getElementById('stabilityScore'),
+                stabilityFeedback: document.getElementById('stabilityFeedback'),
+                recommendations: document.getElementById('recommendations'),
+                detailedAnalysis: document.getElementById('detailedAnalysis')
+            };
+
+            console.log('DOM 요소 확인:', Object.keys(elements).map(key =>
+                `${key}: ${elements[key] ? '존재' : '없음'}`
+            ).join(', '));
+
+            console.log('overallScore 설정:', result.overallScore);
+            if (elements.overallScore) {
+                elements.overallScore.textContent = result.overallScore;
+            } else {
+                console.error('overallScore 요소를 찾을 수 없습니다!');
+            }
+
+            console.log('confidenceScore 설정:', result.confidence?.score);
+            if (elements.confidenceScore) elements.confidenceScore.textContent = result.confidence.score;
+
+            console.log('confidenceFeedback 설정:', result.confidence?.feedback);
+            if (elements.confidenceFeedback) elements.confidenceFeedback.textContent = result.confidence.feedback;
+
+            console.log('engagementScore 설정:', result.engagement?.score);
+            if (elements.engagementScore) elements.engagementScore.textContent = result.engagement.score;
+
+            console.log('engagementFeedback 설정:', result.engagement?.feedback);
+            if (elements.engagementFeedback) elements.engagementFeedback.textContent = result.engagement.feedback;
+
+            console.log('stabilityScore 설정:', result.emotionalStability?.score);
+            if (elements.stabilityScore) elements.stabilityScore.textContent = result.emotionalStability.score;
+
+            console.log('stabilityFeedback 설정:', result.emotionalStability?.feedback);
+            if (elements.stabilityFeedback) elements.stabilityFeedback.textContent = result.emotionalStability.feedback;
+
+            const recList = elements.recommendations;
+            console.log('recommendations 리스트:', result.recommendations);
+            console.log('recommendations 개수:', result.recommendations?.length);
+
+            // Clear existing recommendations safely
+            while (recList.firstChild) {
+                recList.removeChild(recList.firstChild);
+            }
+
+            // Add new recommendations using textContent
+            if (result.recommendations && Array.isArray(result.recommendations)) {
+                result.recommendations.forEach((rec, idx) => {
+                    console.log(`recommendation ${idx}:`, rec);
+                    const li = document.createElement('li');
+                    li.textContent = rec;
+                    recList.appendChild(li);
+                });
+            } else {
+                console.error('recommendations가 배열이 아닙니다:', result.recommendations);
+            }
+
+            console.log('detailedAnalysis 설정:', result.detailedAnalysis?.substring(0, 50));
+            if (elements.detailedAnalysis) {
+                elements.detailedAnalysis.textContent = result.detailedAnalysis;
+            } else {
+                console.error('detailedAnalysis 요소를 찾을 수 없습니다!');
+            }
+
+            console.log('결과 섹션 표시');
+            resultsSection.style.display = 'block';
+            console.log('=== displayResults 완료 ===');
+        }
+
+        function showError(message) {
+            errorSection.textContent = message;
+            errorSection.style.display = 'block';
+        }
+
+        // 이벤트 리스너
+        startBtn.addEventListener('click', startAnalysis);
+        stopBtn.addEventListener('click', stopAnalysis);
+    </script>
+</body>
+</html>
