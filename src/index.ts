@@ -1,4 +1,5 @@
 export const OPEN_ROUTER_API_KEY = Bun.env.API_KEY;
+export const OPEN_AI_KEY = Bun.env.OPEN_AI_KEY;
 
 export const GPT = "openai/chatgpt-4o-latest";
 export const MINI = "openai/gpt-4o-mini";
